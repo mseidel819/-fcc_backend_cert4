@@ -40,12 +40,15 @@ exports.getUser = async (req, res) => {
 exports.createUser = async (req, res) => {
   try {
     const newUser = await User.create(req.body);
-    console.log(newUser);
     res.status(201).json({ username: newUser.username, _id: newUser._id });
   } catch (err) {
+    let errMsg = "couldnt create user";
+    if (err.code === 11000) {
+      errMsg = `username ${err.keyValue.username} already exists. please try another.`;
+    }
     res.status(400).json({
       status: "fail",
-      message: "couldnt create user",
+      message: errMsg,
     });
   }
 };

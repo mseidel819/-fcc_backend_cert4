@@ -3,7 +3,8 @@ const mongoose = require("mongoose");
 const userDataScheme = new mongoose.Schema({
   username: {
     type: String,
-    // required: true,
+    required: true,
+    unique: true,
   },
   //   count: Number,
   log: [
