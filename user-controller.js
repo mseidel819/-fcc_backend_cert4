@@ -56,20 +56,20 @@ exports.createUser = async (req, res) => {
 
 exports.addExercise = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
-    let user1 = await User.findById(req.params.id).select({
-      username: 1,
-    });
+    let user = await User.findById(req.params.id);
+    const { username, _id } = user;
+
     const exercise = await req.body;
+    const { description, duration } = exercise;
+    let { date } = exercise;
     const formattedExercise = {
-      description: exercise.description,
-      duration: exercise.duration,
+      description,
+      duration,
     };
 
-    const { date } = exercise;
     if (!date) {
       const newDate = new Date().toDateString();
-      exercise.date = newDate;
+      date = newDate;
       formattedExercise.date = newDate;
     } else formattedExercise.date = exercise.date;
 
@@ -78,9 +78,11 @@ exports.addExercise = async (req, res) => {
     user.save();
 
     res.status(200).json({
-      username: user1._doc.username,
-      ...formattedExercise,
-      _id: user1._doc._id,
+      username,
+      description,
+      duration,
+      date,
+      _id,
     });
   } catch (err) {
     res.status(400).json({
@@ -94,12 +96,16 @@ exports.getLog = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
     const { _id, username, log, count } = user;
+    console.log(req.query);
+    const selected = await User.findById(req.params.id).select({
+      log: { _id: 0 },
+    });
 
     res.status(200).json({
       username,
       count,
       _id,
-      log,
+      log: selected.log,
     });
   } catch (err) {
     res.status(400).json({
