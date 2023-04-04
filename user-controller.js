@@ -52,3 +52,51 @@ exports.createUser = async (req, res) => {
     });
   }
 };
+
+exports.addExercise = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    let user1 = await User.findById(req.params.id).select({
+      username: 1,
+    });
+    const exercise = await req.body;
+    const formattedExercise = {
+      description: exercise.description,
+      duration: exercise.duration,
+    };
+
+    const { date } = exercise;
+    if (!date) {
+      const newDate = new Date().toDateString();
+      exercise.date = newDate;
+      formattedExercise.date = newDate;
+    } else formattedExercise.date = exercise.date;
+
+    user.log.push(formattedExercise);
+    user.count = user.log.length;
+    user.save();
+
+    res.status(200).json({
+      ...user1._doc,
+      ...formattedExercise,
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "fail",
+      message: "could not add exercise",
+    });
+  }
+};
+
+exports.getLog = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id);
+    console.log(user);
+    res.status(200).json(user);
+  } catch (err) {
+    res.status(400).json({
+      status: "fail",
+      message: "could not get logs",
+    });
+  }
+};

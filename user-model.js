@@ -6,12 +6,18 @@ const userDataScheme = new mongoose.Schema({
     required: true,
     unique: true,
   },
-  //   count: Number,
+  count: Number,
   log: [
     {
-      description: String,
-      duration: Number,
-      date: Date,
+      description: {
+        type: String,
+        required: true,
+      },
+      duration: {
+        type: Number,
+        required: true,
+      },
+      date: String,
     },
   ],
 });
