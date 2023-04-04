@@ -40,7 +40,8 @@ exports.getUser = async (req, res) => {
 exports.createUser = async (req, res) => {
   try {
     const newUser = await User.create(req.body);
-    res.status(201).json({ username: newUser.username, _id: newUser._id });
+    const { username, _id } = newUser;
+    res.status(201).json({ username, _id });
   } catch (err) {
     let errMsg = "couldnt create user";
     if (err.code === 11000) {
@@ -77,8 +78,9 @@ exports.addExercise = async (req, res) => {
     user.save();
 
     res.status(200).json({
-      ...user1._doc,
+      username: user1._doc.username,
       ...formattedExercise,
+      _id: user1._doc._id,
     });
   } catch (err) {
     res.status(400).json({
@@ -91,8 +93,14 @@ exports.addExercise = async (req, res) => {
 exports.getLog = async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
-    console.log(user);
-    res.status(200).json(user);
+    const { _id, username, log, count } = user;
+
+    res.status(200).json({
+      username,
+      count,
+      _id,
+      log,
+    });
   } catch (err) {
     res.status(400).json({
       status: "fail",
