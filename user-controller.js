@@ -21,8 +21,6 @@ exports.getUser = async (req, res) => {
       username: 1,
     });
 
-    // if (!user) throw new Error("could not find this id");
-
     res.status(200).json({
       status: "success",
       data: {
@@ -59,30 +57,32 @@ exports.addExercise = async (req, res) => {
     let user = await User.findById(req.params.id);
     const { username, _id } = user;
 
-    const exercise = await req.body;
+    const exercise = req.body;
+
     const { description, duration } = exercise;
     let { date } = exercise;
     const formattedExercise = {
       description,
-      duration,
+      duration: +duration,
     };
-
+    if (date) {
+      date = new Date(date).toDateString();
+    }
     if (!date) {
-      // const newDate = new Date().toDateString();
-      const newDate = new Date().toISOString().split("T")[0];
+      const newDate = new Date().toDateString();
       date = newDate;
       formattedExercise.date = newDate;
-    } else formattedExercise.date = exercise.date;
+    } else formattedExercise.date = date;
     user.log.push(formattedExercise);
     user.count = user.log.length;
     user.save();
-    console.log(typeof date);
+
     res.status(200).json({
       username,
       description,
-      duration,
+      duration: +duration,
       date,
-      _id,
+      _id: _id.toString(),
     });
   } catch (err) {
     res.status(400).json({
@@ -113,9 +113,14 @@ exports.getLog = async (req, res) => {
     const queriedLog = selected.log.filter((entry, i) => {
       if (req.query.limit && i + 1 > req.query.limit) return;
       const entryDate = new Date(entry.date).getTime();
-      console.log(typeof entry.date);
       return entryDate >= startDate && entryDate <= endDate;
     });
+    // console.log({
+    //   username,
+    //   count: queriedLog.length,
+    //   _id,
+    //   log: queriedLog,
+    // });
 
     res.status(200).json({
       username,
@@ -129,4 +134,13 @@ exports.getLog = async (req, res) => {
       message: "could not get logs",
     });
   }
+};
+
+exports.deleteFcc = async (req, res) => {
+  const deleted = await User.deleteMany({ username: /^fcc/ });
+
+  res.status(204).json({
+    status: "success",
+    data: null,
+  });
 };
