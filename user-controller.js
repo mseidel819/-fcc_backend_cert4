@@ -54,6 +54,9 @@ exports.createUser = async (req, res) => {
 
 exports.addExercise = async (req, res) => {
   try {
+    if (!req.body.description || !req.body.duration)
+      throw new Error("duration and description are required fields");
+
     let user = await User.findById(req.params.id);
     const { username, _id } = user;
 
@@ -61,72 +64,70 @@ exports.addExercise = async (req, res) => {
 
     const { description, duration } = exercise;
     let { date } = exercise;
+
     const formattedExercise = {
       description,
       duration: +duration,
+      date: new Date().toDateString(),
     };
+
     if (date) {
-      date = new Date(date).toDateString();
+      date = new Date(date + "T06:00:00.000Z").toDateString();
+      formattedExercise.date = date;
     }
-    if (!date) {
-      const newDate = new Date().toDateString();
-      date = newDate;
-      formattedExercise.date = newDate;
-    } else formattedExercise.date = date;
+
     user.log.push(formattedExercise);
     user.count = user.log.length;
+    // console.log(user.count);
     user.save();
+
+    // console.log(req.body.date);
+    // console.log(formattedExercise.date);
 
     res.status(200).json({
       username,
       description,
       duration: +duration,
-      date,
+      date: formattedExercise.date,
       _id: _id.toString(),
     });
   } catch (err) {
     res.status(400).json({
       status: "fail",
-      message: "could not add exercise",
+      message: err.message,
     });
   }
 };
 
 exports.getLog = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
-    const { _id, username, log, count } = user;
-
-    let selected = await User.findById(req.params.id).select({
+    const user = await User.findById(req.params.id).select({
       log: { _id: 0 },
     });
+    const { _id, username } = user;
 
-    let endDate = new Date().getTime();
-    let startDate = 0;
-    if (req.query.to) {
-      endDate = new Date(req.query.to).getTime();
-    }
-    if (req.query.from) {
-      startDate = new Date(req.query.from).getTime();
-    }
+    let endDate = req.query.to
+      ? new Date(req.query.to + "T05:00:00.000Z").getTime()
+      : new Date().getTime();
 
-    const queriedLog = selected.log.filter((entry, i) => {
-      if (req.query.limit && i + 1 > req.query.limit) return;
+    let startDate = req.query.from ? new Date(req.query.from).getTime() : 0;
+    let limiter = req.query.limit ?? user.log.length;
+
+    let queriedLog = user.log.filter((entry, i) => {
       const entryDate = new Date(entry.date).getTime();
+
       return entryDate >= startDate && entryDate <= endDate;
     });
-    // console.log({
-    //   username,
-    //   count: queriedLog.length,
-    //   _id,
-    //   log: queriedLog,
-    // });
+
+    const limitedLog = queriedLog.filter((item, i) => {
+      return i < limiter;
+    });
 
     res.status(200).json({
       username,
-      count: queriedLog.length,
+      count: limitedLog.length,
       _id,
-      log: queriedLog,
+      log: limitedLog,
     });
   } catch (err) {
     res.status(400).json({
@@ -141,6 +142,5 @@ exports.deleteFcc = async (req, res) => {
 
   res.status(204).json({
     status: "success",
-    data: null,
   });
 };
