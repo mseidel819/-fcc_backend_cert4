@@ -9,7 +9,7 @@ const {
   addExercise,
   getLog,
   deleteFcc,
-} = require("./user-controller");
+} = require("./user/user-controller");
 
 // app.get("/", (req, res) => {
 //   res.sendFile(__dirname + "/views/index.html");
