@@ -2,9 +2,9 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const app = express();
 const cors = require("cors");
-require("dotenv").config({ path: "./config.env" });
+require("dotenv").config({ path: "./.env" });
 const mongoose = require("mongoose");
-const userRouter = require("./user-routes");
+const userRouter = require("./user/user-routes");
 
 const DB = process.env.DATABASE.replace(
   "<PASSWORD>",
